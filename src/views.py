@@ -15,6 +15,11 @@ view_log.setLevel(logging.DEBUG)
 
 
 def function_cost_valut(name_valut: str) -> float:
+    '''
+    функция принимает трикер 1-й валюты и возвращает ее стоимость в рублях
+    :param name_valut:
+    :return:
+    '''
     valut_name = name_valut.upper()
 
     try:
@@ -36,10 +41,18 @@ def function_cost_valut(name_valut: str) -> float:
 
 
 def stock_cost(name_stock: str) -> float:
+    '''
+    Функция принимает строку с трикером 1-й акции и возвращает ее стоимость
+    :param name_stock:
+    :return:
+    '''
     name_stock = name_stock.upper()
-    url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={name_stock}&interval=5min&apikey=RDWRZFSGBN7YQBKE'
+    #url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={name_stock}&interval=5min&apikey=KGGQKNFNRO6HY5MP'
+    #url = f'https://www.alphavantage.co/query?function = TIME_SERIES_DAILY&symbol={name_stock}&interval=5min&apikey=KGGQKNFNRO6HY5MP'
     try:
-        data = requests.get(url, timeout=1500).json()
+        #data = requests.get(url, timeout=1500).json()
+        data = {'timestamp': '2026-05-22 19:55:00', 'open': 252.030, 'high': 252.2197, 'low': 525.0000,
+                'close': 252.1218, 'volume': 6458}
     except requests.exceptions.Timeout as timeout_err:
         return f"Превышено время ожидания...{timeout_err}"
     except requests.exceptions.HTTPError as http_err:
@@ -52,7 +65,29 @@ def stock_cost(name_stock: str) -> float:
         return f"Ошибка в обращении к сервису. Попробутйе позже {req_err}"
     else:
         view_log.debug(f'Что получили {data}')
-        data = {'timestamp': '2026-05-22 19:55:00', 'open':252.030, 'high':252.2197, 'low':525.0000, 'close':252.1218, 'volume':6458}
+        #подмена данных с сайта не дающего инфу в его формате
+
         out = read_json_stock(data)
+        out = f'{out:.2f}'
 
     return out
+
+#Сомнительное решение:
+def list_answer_paper(type:str='valut') -> list:
+    '''
+    функция принимает строковое значение выбора валюты 'valut' или акции 'stock' и выдает список либо валют либо акций
+    из файла настройки пользователя data/user_settings.json где содержится эта информация.
+    :param type:
+    :return:
+    '''
+    with open('../data/user_settings.json') as file:
+        data = json.load(file)
+    if type == 'valut':
+        for key, value in data.items():
+            if key == "user_currencies":
+                list_answer = value
+    if type == 'stock':
+        for key, value in data.items():
+            if key == "user_stocks":
+                list_answer = value
+    return list_answer
