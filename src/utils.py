@@ -1,9 +1,11 @@
-import json
 import logging
-from unittest.mock import inplace
+from datetime import date
+from src.views import stock_cost
+from src.views import valute_cost
 
 import pandas as pd
 from datetime import datetime
+
 
 utils_log = logging.getLogger('utils')
 file_utils_log = logging.FileHandler('utils.log', encoding='utf-8')
@@ -13,37 +15,10 @@ file_utils_log.setFormatter(file_utils_log_formater)
 utils_log.setLevel(logging.DEBUG)
 
 
-def read_json_valut(input_data:list[dict], name_valut: str)-> float:
+def choice_parer(type:str, list_reqwest:list)-> dict:
     '''
-    функция принимает список словарей с данными по валютам, и трикет валюты например 'USD' и возвращает стоимость в
-    рублях float.
-    :param input_data:
-    :param name_valut:
-    :return:
-    '''
-    valute_data = input_data['Valute']
-    utils_log.debug(f'Принимает словарь - {valute_data}')
-    previous_value = valute_data[f'{name_valut}']['Previous']
-    utils_log.debug(f'Возвращает значение - {previous_value}')
-    return previous_value
-
-
-def read_json_stock(input_data: dict)-> float:
-    '''
-    функция принимает список словарь с данными по акции и возвращает стоимость в float.
-    :param input_data:
-    :param name_valut:
-    :return:
-    '''
-    utils_log.debug(f'Получил инфу - {input_data}')
-    stock_value = input_data['close']
-    utils_log.debug(f'Стоимость акции - {stock_value}')
-    return stock_value
-
-def answer_parer(type:str, list_reqwest:list)-> dict:
-    '''
-    функция принимает тип строки 'stock' или 'valut' и список тикеров в соответствии с типом и возвращает список валют
-    либо  акций для формирования главного ответа.
+    функция принимает тип строки 'stock' или 'valut' и список тикеров (перечень необходимых) в соответствии с типом
+     и возвращает список валют либо акций для формирования главного ответа.
     :param type:
     :param list_reqwest:
     :return:
@@ -59,7 +34,7 @@ def answer_parer(type:str, list_reqwest:list)-> dict:
         answer["stock prices"] = setr
     if type == 'valut':
         for item in list_reqwest:
-            base = stock_cost(item)
+            base = valute_cost(item)
             setr[item] = base
             avane.append(setr[item])
         answer["currency"] = setr
@@ -89,20 +64,23 @@ def greeting_time() -> str:
     return greeting
 
 
-def data_frame_info()-> pd.DataFrame:
+def data_frame_work()-> pd.DataFrame:
     #создаем дата фрейм для работы с данными
-    excel_data = pd.read_excel("..\data\operations.xlsx")
+    excel_data = pd.read_excel(r"..\data\operations.xlsx")
     return excel_data
 
-def card_set(card_data:pd.DataFrame)-> list:
+def creat_list_cards(card_data:pd.DataFrame)-> list:
     '''
     функция принимает дата фрейм транзакций принмает все значения карт в множество и возвращает список банковских карт
     участвующих в тарнз акциях
     :param card_data:
     :return:
     '''
+    # Формируем датафрейм без пустых элементов содержащихся в столбце "Номер карты"
     cards = card_data.loc[card_data['Номер карты'].notnull()]
+    #формируем множество () через фильтрацию с выбором столбца "Номер карты"
     cards_set = set(cards['Номер карты'].tolist())
+    # возвращаем перечень кар преобразовав его из множества в список
     return list(cards_set)
 
 def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
@@ -115,21 +93,56 @@ def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
     '''
     shtorm = []
     for item in name_cards:
+        #определяем словарь для финального ответа курсового проекта по банковским картам
         answer = {}
+        #убираем звездочку из ответа
         stok = item[1:]
+        #заносим первый ключ со значением в словарь
         answer["last_digits"] = stok
+        #формируем датафрейм для выбранной карты
         spred = card_data.loc[card_data['Номер карты'] == item]
+        #находим сумму по всем платежам карты
         money = spred['Сумма платежа'].sum()
+        #убираем лишние знаки после запятой
         money = f'{money:.2f}'
+        #возвращаем значению тип float
         money = float(money)
+        #заносим второй ключ ответа по картам
         answer["total_spent"] = money
+        #вычисляем кэш бек из условия курсовой работы равен 1% от общей суммы
         cash_back = money * 0.01
+        # убираем лишние знаки после запятой
         cash_back = f'{cash_back:.2f}'
+        # возвращаем значению тип float
         cash_back = float(cash_back)
+        # заносим третий ключ ответа по картам
         answer["cash_back"] = cash_back
         utils_log.debug(f'итоговый словарь = {answer}')
+        #добавляем словарь в финальный список по картам
         shtorm.append(answer)
         utils_log.debug(f'добавляем в список = {shtorm}')
 
     return shtorm
+
+
+def top_trans (data:pd.DataFrame)-> pd.DataFrame:
+    # Получаем сегодняшнюю дату
+    today = date.today()
+    # Формируем формат выдаваемый
+    formatted_date = today.strftime("%Y-%m-%d")
+    # узнаем день месяца
+    today_date = today.day
+    # узнаем месяц
+    today_month = today.month
+    # приводим столбец к формату datetime64
+    data['Дата платежа'] = pd.to_datetime(data['Дата платежа'], dayfirst=True)
+    # выбираем из датафрейма нужный промежуток с 1 по текущее и подменой года по сохраненный файл...
+    spred = data.loc[(data['Дата платежа'] <= f'2021-{today_month}-{today_date}') & (
+                data['Дата платежа'] >= f'2021-{today_month}-1')]
+    # сортировка по возрастанию с 1 по текущее число
+    spred = spred.sort_values(by='Дата платежа', ascending=True)
+    spred['Сумма платежа'] = spred['Сумма платежа'].apply(lambda x: abs(x) if x < 0 else x)
+    # вывод нескольких конкретных столбов
+    spred = spred.sort_values(by='Сумма платежа', ascending=False)
+    return spred
 
