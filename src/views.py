@@ -1,10 +1,9 @@
 import requests
 import logging
 import json
-import csv
-from io import StringIO
-from src.utils import read_json_valut
-from src.utils import read_json_stock
+
+
+
 
 view_log = logging.getLogger('view')
 file_view_log = logging.FileHandler('viewlog.log', encoding='utf-8')
@@ -14,30 +13,29 @@ file_view_log.setFormatter(file_view_log_formater)
 view_log.setLevel(logging.DEBUG)
 
 
-def function_cost_valut(name_valut: str) -> float:
+def valute_cost(name_valute:str) -> float:
     '''
-    функция принимает трикер 1-й валюты и возвращает ее стоимость в рублях
-    :param name_valut:
+    функция возвращает словарь с данными по валютам
+    :param name_valute:
     :return:
     '''
-    valut_name = name_valut.upper()
-
+    name_valute = name_valute.upper()
     try:
         response = requests.get(  'https://www.cbr-xml-daily.ru/daily_json.js', 'GET', timeout=15)
         view_log.debug(f'Делай раз - чтение прошло успешно и записано \n {response.text}')
     except requests.exceptions. Timeout:
-        return "Превышено время ожидания..."
+        print("Превышено время ожидания...")
     except requests.exceptions.TooManyRedirects:
-        return "Количество перенаправлений превысело предел"
+        print("Количество перенаправлений превысело предел")
     except requests.exceptions.RequestException:
-        return "Ошибка в обращении к сервису. Попробуте позже"
+        print("Ошибка в обращении к сервису. Попробуте позже")
     else:
         stend = json.loads(response.text)
         view_log.debug(f'Делай два - принят словарь \n {stend}')
-        operacion_valut = read_json_valut(stend, valut_name)
-        view_log.debug(f'Делай три - возвращает значение {valut_name} = {operacion_valut}')
+        stend = stend['Valute'][name_valute]['Previous']
+        stend = f'{stend:.2f}'
 
-    return operacion_valut
+    return stend
 
 
 def stock_cost(name_stock: str) -> float:
@@ -67,13 +65,13 @@ def stock_cost(name_stock: str) -> float:
         view_log.debug(f'Что получили {data}')
         #подмена данных с сайта не дающего инфу в его формате
 
-        out = read_json_stock(data)
+        out = data['close']
         out = f'{out:.2f}'
 
     return out
 
 #Сомнительное решение:
-def list_answer_paper(type:str='valut') -> list:
+def list_paper(type:str) -> list:
     '''
     функция принимает строковое значение выбора валюты 'valut' или акции 'stock' и выдает список либо валют либо акций
     из файла настройки пользователя data/user_settings.json где содержится эта информация.
@@ -91,3 +89,35 @@ def list_answer_paper(type:str='valut') -> list:
             if key == "user_stocks":
                 list_answer = value
     return list_answer
+
+
+def read_stock(input_data: dict)-> float:
+    '''
+    функция принимает список словарь с данными по акции и возвращает стоимость в float.
+    :param input_data:
+    :param name_valut:
+    :return:
+    '''
+
+    stock_value = input_data['close']
+
+    return stock_value
+
+
+def read_valute(name_valut: str)-> float:
+    '''
+    функция принимает список словарей с данными по валютам (какие сколько стоят), и трикет валюты например 'USD' и
+    возвращает стоимость в рублях float.
+    :param input_data:
+    :param name_valut:
+    :return:
+    '''
+    name_valut = name_valut.upper()
+    #принимаем стоимость валюты
+    input_data = valute_cost(name_valut)
+    #выбираем словарь по тикеру необходимой валюты
+    valute_data = input_data['valut']
+    #выбираем значение стоимости валюты по ее тикеру и значению
+    previous_value = valute_data[f'{name_valut}']['Previous']
+
+    return previous_value
