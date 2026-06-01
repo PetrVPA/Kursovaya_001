@@ -8,7 +8,7 @@ from datetime import datetime
 
 
 utils_log = logging.getLogger('utils')
-file_utils_log = logging.FileHandler('utils.log', encoding='utf-8')
+file_utils_log = logging.FileHandler(r'..\data\utils.log', encoding='utf-8')
 utils_log.addHandler(file_utils_log)
 file_utils_log_formater = logging.Formatter('%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
 file_utils_log.setFormatter(file_utils_log_formater)
@@ -38,6 +38,7 @@ def choice_parer(type:str, list_reqwest:list)-> dict:
             setr[item] = base
             avane.append(setr[item])
         answer["currency"] = setr
+    utils_log.debug(f'Делей раз - список бумаг - {answer}')
     return answer
 
 def greeting_time() -> str:
@@ -67,6 +68,7 @@ def greeting_time() -> str:
 def data_frame_work()-> pd.DataFrame:
     #создаем дата фрейм для работы с данными
     excel_data = pd.read_excel(r"..\data\operations.xlsx")
+    utils_log.debug(f'Делей раз - главный датафрейм курсового проекта - {excel_data}')
     return excel_data
 
 def creat_list_cards(card_data:pd.DataFrame)-> list:
@@ -81,6 +83,7 @@ def creat_list_cards(card_data:pd.DataFrame)-> list:
     #формируем множество () через фильтрацию с выбором столбца "Номер карты"
     cards_set = set(cards['Номер карты'].tolist())
     # возвращаем перечень кар преобразовав его из множества в список
+    utils_log.debug(f'Делей раз - список банковских карт = {cards_set}')
     return list(cards_set)
 
 def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
@@ -92,6 +95,7 @@ def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
     :return:
     '''
     shtorm = []
+    output={}
     for item in name_cards:
         #определяем словарь для финального ответа курсового проекта по банковским картам
         answer = {}
@@ -120,9 +124,10 @@ def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
         utils_log.debug(f'итоговый словарь = {answer}')
         #добавляем словарь в финальный список по картам
         shtorm.append(answer)
+        output ["cards"] = shtorm
         utils_log.debug(f'добавляем в список = {shtorm}')
-
-    return shtorm
+        utils_log.debug(f'Итоговый ответ в формате курсового проекта = {output}')
+    return output
 
 
 def top_trans (data:pd.DataFrame)-> pd.DataFrame:
@@ -144,5 +149,6 @@ def top_trans (data:pd.DataFrame)-> pd.DataFrame:
     spred['Сумма платежа'] = spred['Сумма платежа'].apply(lambda x: abs(x) if x < 0 else x)
     # вывод нескольких конкретных столбов
     spred = spred.sort_values(by='Сумма платежа', ascending=False)
+    utils_log.debug(f'Итоговый ответ в формате курсового проекта = {spred}')
     return spred
 

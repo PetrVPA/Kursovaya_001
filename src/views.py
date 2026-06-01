@@ -6,7 +6,7 @@ import json
 
 
 view_log = logging.getLogger('view')
-file_view_log = logging.FileHandler('viewlog.log', encoding='utf-8')
+file_view_log = logging.FileHandler(r'..\data\viewlog.log', encoding='utf-8')
 view_log.addHandler(file_view_log)
 file_view_log_formater = logging.Formatter('%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
 file_view_log.setFormatter(file_view_log_formater)
@@ -15,9 +15,9 @@ view_log.setLevel(logging.DEBUG)
 
 def valute_cost(name_valute:str) -> float:
     '''
-    функция возвращает словарь с данными по валютам
-    :param name_valute:
-    :return:
+    функция принимает трикер валюты возвращает стоимость валюты в рублях
+    :param name_valute трикер валюты
+    :return: stend возвращаемое значение стоимости валюты
     '''
     name_valute = name_valute.upper()
     try:
@@ -34,6 +34,7 @@ def valute_cost(name_valute:str) -> float:
         view_log.debug(f'Делай два - принят словарь \n {stend}')
         stend = stend['Valute'][name_valute]['Previous']
         stend = f'{stend:.2f}'
+        view_log.debug(f'Делай три - ответ функции \n {stend}')
 
     return stend
 
@@ -62,11 +63,12 @@ def stock_cost(name_stock: str) -> float:
     except requests.exceptions.RequestException as req_err:
         return f"Ошибка в обращении к сервису. Попробутйе позже {req_err}"
     else:
-        view_log.debug(f'Что получили {data}')
+        view_log.debug(f'Делай раз. Что получили с сервера: {data}')
         #подмена данных с сайта не дающего инфу в его формате
 
         out = data['close']
         out = f'{out:.2f}'
+        view_log.debug(f'Делай два. Ответ функции: {name_stock} = {out}')
 
     return out
 
@@ -80,6 +82,7 @@ def list_paper(type:str) -> list:
     '''
     with open('../data/user_settings.json') as file:
         data = json.load(file)
+        view_log.debug(f'Делай раз. Прием: {data}')
     if type == 'valut':
         for key, value in data.items():
             if key == "user_currencies":
@@ -88,36 +91,5 @@ def list_paper(type:str) -> list:
         for key, value in data.items():
             if key == "user_stocks":
                 list_answer = value
+    view_log.debug(f'Делай два. Ответ функции: {list_answer}')
     return list_answer
-
-
-def read_stock(input_data: dict)-> float:
-    '''
-    функция принимает список словарь с данными по акции и возвращает стоимость в float.
-    :param input_data:
-    :param name_valut:
-    :return:
-    '''
-
-    stock_value = input_data['close']
-
-    return stock_value
-
-
-def read_valute(name_valut: str)-> float:
-    '''
-    функция принимает список словарей с данными по валютам (какие сколько стоят), и трикет валюты например 'USD' и
-    возвращает стоимость в рублях float.
-    :param input_data:
-    :param name_valut:
-    :return:
-    '''
-    name_valut = name_valut.upper()
-    #принимаем стоимость валюты
-    input_data = valute_cost(name_valut)
-    #выбираем словарь по тикеру необходимой валюты
-    valute_data = input_data['valut']
-    #выбираем значение стоимости валюты по ее тикеру и значению
-    previous_value = valute_data[f'{name_valut}']['Previous']
-
-    return previous_value
