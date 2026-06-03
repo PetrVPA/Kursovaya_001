@@ -13,7 +13,34 @@ file_utils_log_formater = logging.Formatter('%(asctime)s - %(name)s - %(funcName
 file_utils_log.setFormatter(file_utils_log_formater)
 utils_log.setLevel(logging.DEBUG)
 
+def writen_to_csv(func):
+    '''
+    декоратор без параметров для записи результатов работы функции в файл
+    :param func:
+    :return:
+    '''
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        utils_log.debug(f'Делай ноль - проверка принятого дата фрейма = {result}')
+        result = result.to_dict(orient='records')
+        utils_log.debug(f'Делай один - проверка словаря = {result}')
+        with open(r'..\data\spending_by_category.csv', 'w', newline='', encoding='utf-8') as file:
+            fieldnames = ['Дата платежа', 'Категория', 'Сумма операции']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in result:
+                utils_log.debug(f'Делай два - проверка принятого значения = {row}')
+                writer.writerow(row)
+        utils_log.debug(f'Делай три - получаем данные от функции = {result}')
+        answer = func(*args, **kwargs)
+        utils_log.debug(f'Делай четыре - возвращаем значение декорируемой функции = {answer}')
+        return answer
+
+
+    return wrapper
+
 # типизация переменных
+@writen_to_csv
 def spending_by_category(transactions: pd.DataFrame, category: str, date: Optional[str] = None) -> pd.DataFrame:
     '''
     С 1.012018 по 31.12.2021г.
@@ -54,28 +81,3 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
     utils_log.debug(f'Делай четыре - формирование фрейма ответа = {category} = {answer_challenge}')
 
     return answer_challenge
-
-
-def writen_to_csv(func):
-    '''
-    декоратор без параметров для записи результатов работы функции в файл
-    :param func:
-    :return:
-    '''
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        # with open(r'..\data\cash_back.csv', 'w', encoding='utf-8') as file:
-        #     result = csv.writer(file)
-        with open(r'..\data\cash_back.csv', 'w', newline='', encoding='utf-8') as file:
-            fieldnames = ['Category', 'Money']
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
-            writer.writeheader()
-            for row in result:
-                writer.writerow(row)
-        utils_log.debug(f'Делай раз - получаем данные от функции = {result}')
-        answer = func(*args, **kwargs)
-        utils_log.debug(f'Делай два - возвращаем значение декарируемой функции = {answer}')
-        return answer
-
-
-    return wrapper
