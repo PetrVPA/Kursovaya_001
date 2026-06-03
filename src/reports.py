@@ -60,9 +60,9 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         utils_log.debug(f'Делай раз - проверка введенной даты = {today_day}.{today_month}.{today_year}')
 
     if date is None:
-        date = datetime.today().strftime('%Y-%m-%d')
-        today_day = date.day
-        today_month = date.month
+        today = datetime.today()
+        today_day = today.day
+        today_month = today.month
         today_year = 2021
         utils_log.debug(f'Делай раз - проверка если дату не ввели = {today_day}.{today_month}.{today_year}')
 
