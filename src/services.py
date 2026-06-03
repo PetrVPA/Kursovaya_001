@@ -1,4 +1,5 @@
 from src.utils import data_frame_work
+from src.reports import writen_to_csv
 import logging
 
 import pandas as pd
@@ -31,11 +32,11 @@ def beneficial_cashback(year:str, month:str) -> list(dict):
     answer_sum = {}
     for category in list_categories:
         data_filter = data_frame_funck.loc[(data_frame_funck['Категория'] == category)]
-        utils_log.debug(f'Делай четыре - получаем транзакции по очередной категории {category} = {data_filter}')
+        utils_log.debug(f'Делай четыре - получаем транзакции по очередной категории "{category}" = {data_filter}')
         data_filter['Сумма платежа'] = data_filter['Сумма платежа'].apply(lambda x: abs(x) if x < 0 else x)
-        utils_log.debug(f'Делай пять - избавляемся от минуса {category} = {data_filter}')
+        utils_log.debug(f'Делай пять - избавляемся от минуса "{category}" = {data_filter}')
         money = data_filter['Сумма платежа'].sum()
-        utils_log.debug(f'Делай шесть - получаем сумму по категории {category} = {money}')
+        utils_log.debug(f'Делай шесть - получаем сумму по категории "{category}" = {money}')
         money = money * 0.01
         money = f'{money:.2f}'
         money = float(money)
