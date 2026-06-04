@@ -1,4 +1,5 @@
 import csv
+from dateutil.relativedelta import relativedelta
 from multiprocessing.connection import answer_challenge
 
 import pandas as pd
@@ -58,6 +59,10 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         if today_year>2021 or today_year<2018:
             today_year = 2021
         utils_log.debug(f'Делай раз - проверка введенной даты = {today_day}.{today_month}.{today_year}')
+        end_day = date - relativedelta(months=3)
+        end_month = end_day.month
+        end_year = end_day.year
+        end_day = end_day.day
 
     if date is None:
         today = datetime.today()
@@ -65,13 +70,15 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         today_month = today.month
         today_year = 2021
         utils_log.debug(f'Делай раз - проверка если дату не ввели = {today_day}.{today_month}.{today_year}')
+        end_day = today - relativedelta(months=3)
+        end_month = end_day.month
+        end_year = end_day.year
+        end_day = end_day.day
 
-    time_difference = 2
-    end_month = today_month - time_difference
 
     transactions['Дата платежа'] = pd.to_datetime(transactions['Дата платежа'], dayfirst=True)
     spred = transactions[(transactions['Дата платежа'] <= pd.to_datetime(f'{today_year}-{today_month}-{today_day}')) &
-                         (transactions['Дата платежа'] >= pd.to_datetime(f'{today_year}-{end_month}-{today_day}'))]
+                         (transactions['Дата платежа'] >= pd.to_datetime(f'{end_year}-{end_month}-{end_day}'))]
     utils_log.debug(f'Делай два - фильтрация дата фрейма по дате = {spred['Дата платежа']}')
 
     spred = spred[(spred['Категория']==category)]
@@ -79,5 +86,6 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
 
     answer_challenge = spred.loc[:, ['Дата платежа', 'Категория','Сумма операции']]
     utils_log.debug(f'Делай четыре - формирование фрейма ответа = {category} = {answer_challenge}')
+
 
     return answer_challenge

@@ -28,16 +28,20 @@ def choice_parer(type:str, list_reqwest:list)-> dict:
     avane =[]
     if type == 'stock':
         for item in list_reqwest:
+            setr = {}
             base = stock_cost(item)
-            setr[item] = base
-            avane.append(setr[item])
-        answer["stock prices"] = setr
+            setr['stock'] = item
+            setr['price'] = base
+            avane.append(setr)
+        answer["stock prices"] = avane
     if type == 'valut':
         for item in list_reqwest:
+            setr = {}
             base = valute_cost(item)
-            setr[item] = base
-            avane.append(setr[item])
-        answer["currency"] = setr
+            setr['currency'] = item
+            setr['rate'] = base
+            avane.append(setr)
+        answer["currency_rates"] = avane
     utils_log.debug(f'Делей раз - список бумаг - {answer}')
     return answer
 
@@ -51,16 +55,16 @@ def greeting_time() -> str:
 
     if hour_current >= 6 and hour_current < 12:
         greeting = "Доброе утро"
-        utils_log.debug(f'Делей раз - сейчас утро? - {greeting}')
+        utils_log.debug(f'Делай раз - сейчас утро? - {greeting}')
     if hour_current >= 12 and hour_current < 18:
         greeting = "Добрый день"
-        utils_log.debug(f'Делей два - сейчас день? - {greeting}')
+        utils_log.debug(f'Делай два - сейчас день? - {greeting}')
     if hour_current >= 18 and hour_current <= 23:
         greeting = "Добрый вечер"
-        utils_log.debug(f'Делей три - сейчас вечер? - {greeting}')
+        utils_log.debug(f'Делай три - сейчас вечер? - {greeting}')
     if hour_current >= 0 and hour_current < 6:
         greeting = "Доброй ночи"
-        utils_log.debug(f'Делей четыре - сейчас ночь? - {greeting}')
+        utils_log.debug(f'Делай четыре - сейчас ночь? - {greeting}')
 
     return greeting
 
@@ -68,7 +72,7 @@ def greeting_time() -> str:
 def data_frame_work()-> pd.DataFrame:
     #создаем дата фрейм для работы с данными
     excel_data = pd.read_excel(r"..\data\operations.xlsx")
-    utils_log.debug(f'Делей раз - главный датафрейм курсового проекта - {excel_data}')
+    utils_log.debug(f'Делай раз - главный датафрейм курсового проекта - {excel_data}')
     return excel_data
 
 def creat_list_cards(card_data:pd.DataFrame)-> list:
@@ -83,7 +87,7 @@ def creat_list_cards(card_data:pd.DataFrame)-> list:
     #формируем множество () через фильтрацию с выбором столбца "Номер карты"
     cards_set = set(cards['Номер карты'].tolist())
     # возвращаем перечень кар преобразовав его из множества в список
-    utils_log.debug(f'Делей раз - список банковских карт = {cards_set}')
+    utils_log.debug(f'Делай раз - список банковских карт = {cards_set}')
     return list(cards_set)
 
 def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
@@ -105,6 +109,7 @@ def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
         answer["last_digits"] = stok
         #формируем датафрейм для выбранной карты
         spred = card_data.loc[card_data['Номер карты'] == item]
+        spred['Сумма платежа'] = spred['Сумма платежа'].apply(lambda x: abs(x) if x < 0 else x)
         #находим сумму по всем платежам карты
         money = spred['Сумма платежа'].sum()
         #убираем лишние знаки после запятой
@@ -130,7 +135,10 @@ def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
     return output
 
 
-def top_trans (data:pd.DataFrame)-> pd.DataFrame:
+def top_trans (data:pd.DataFrame)-> list(dict):
+    stend = {}
+    answer_full = {}
+    storm = []
     # Получаем сегодняшнюю дату
     today = date.today()
     # Формируем формат выдаваемый
@@ -146,9 +154,24 @@ def top_trans (data:pd.DataFrame)-> pd.DataFrame:
                 data['Дата платежа'] >= f'2021-{today_month}-1')]
     # сортировка по возрастанию с 1 по текущее число
     spred = spred.sort_values(by='Дата платежа', ascending=True)
+    # убираем знак минус
     spred['Сумма платежа'] = spred['Сумма платежа'].apply(lambda x: abs(x) if x < 0 else x)
     # вывод нескольких конкретных столбов
     spred = spred.sort_values(by='Сумма платежа', ascending=False)
-    utils_log.debug(f'Итоговый ответ в формате курсового проекта = {spred}')
-    return spred
+    utils_log.debug(f'Итоговый дата фрейм = {spred}')
+    answer = spred.loc[:, ['Дата платежа', 'Сумма платежа', 'Категория', 'Описание']]
+    answer = answer.head(5)
+    answer = answer.rename(columns={'Дата платежа': 'date'})
+    answer = answer.rename(columns={'Сумма платежа': 'amout'})
+    answer = answer.rename(columns={'Категория': 'category'})
+    answer = answer.rename(columns={'Описание': 'description'})
+
+    answer['date'] = answer['date'].dt.strftime('%Y-%m-%d')
+
+    storm = answer.to_dict('records')
+
+
+
+
+    return storm
 
