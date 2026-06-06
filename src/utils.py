@@ -5,10 +5,12 @@ from src.views import valute_cost
 
 import pandas as pd
 from datetime import datetime
+import os.path
 
-
+file_path = os.path.join(r'..\data\utils.log')
+log_path = os.path.abspath(file_path)
 utils_log = logging.getLogger('utils')
-file_utils_log = logging.FileHandler(r'..\data\utils.log', encoding='utf-8')
+file_utils_log = logging.FileHandler(log_path, encoding='utf-8')
 utils_log.addHandler(file_utils_log)
 file_utils_log_formater = logging.Formatter('%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
 file_utils_log.setFormatter(file_utils_log_formater)
@@ -75,6 +77,7 @@ def data_frame_work()-> pd.DataFrame:
     utils_log.debug(f'Делай раз - главный датафрейм курсового проекта - {excel_data}')
     return excel_data
 
+
 def creat_list_cards(card_data:pd.DataFrame)-> list:
     '''
     функция принимает дата фрейм транзакций принмает все значения карт в множество и возвращает список банковских карт
@@ -89,6 +92,7 @@ def creat_list_cards(card_data:pd.DataFrame)-> list:
     # возвращаем перечень кар преобразовав его из множества в список
     utils_log.debug(f'Делай раз - список банковских карт = {cards_set}')
     return list(cards_set)
+
 
 def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
     '''
@@ -165,13 +169,6 @@ def top_trans (data:pd.DataFrame)-> list(dict):
     answer = answer.rename(columns={'Сумма платежа': 'amout'})
     answer = answer.rename(columns={'Категория': 'category'})
     answer = answer.rename(columns={'Описание': 'description'})
-
     answer['date'] = answer['date'].dt.strftime('%Y-%m-%d')
-
     storm = answer.to_dict('records')
-
-
-
-
     return storm
-
