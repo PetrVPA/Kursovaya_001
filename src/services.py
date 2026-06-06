@@ -1,12 +1,14 @@
 from src.utils import data_frame_work
-from src.reports import writen_to_csv
 import logging
 
 import pandas as pd
+import os.path
 from datetime import datetime
 
+file_path = os.path.join(r'..\data\services.log')
+log_path = os.path.abspath(file_path)
 utils_log = logging.getLogger('services')
-file_utils_log = logging.FileHandler(r'..\data\services.log', encoding='utf-8')
+file_utils_log = logging.FileHandler(log_path, encoding='utf-8')
 utils_log.addHandler(file_utils_log)
 file_utils_log_formater = logging.Formatter('%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
 file_utils_log.setFormatter(file_utils_log_formater)
