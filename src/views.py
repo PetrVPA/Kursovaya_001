@@ -49,12 +49,21 @@ def stock_cost(name_stock: str) -> float:
     :return:
     '''
     name_stock = name_stock.upper()
-    #url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={name_stock}&interval=5min&apikey=KGGQKNFNRO6HY5MP'
-    #url = f'https://www.alphavantage.co/query?function = TIME_SERIES_DAILY&symbol={name_stock}&interval=5min&apikey=KGGQKNFNRO6HY5MP'
+    url = 'https://api.api-ninjas.com/v1/stockprice'
+    #url = rf'https: // api.api - ninjas.com / v1 / stockprice?ticker = {name_stock}'
+    #API_KEY = os.environ['hhxtBn5pSWlYgzfUSprB99up8XxiKM6ICtrISqiu']
+    API_KEY = 'hhxtBn5pSWlYgzfUSprB99up8XxiKM6ICtrISqiu'
+
     try:
-        #data = requests.get(url, timeout=1500).json()
-        data = {'timestamp': '2026-05-22 19:55:00', 'open': 252.030, 'high': 252.2197, 'low': 525.0000,
-                'close': 252.1218, 'volume': 6458}
+        data = requests.get(
+            url,
+            params={'ticker': name_stock},
+            headers={'X-Api-Key': API_KEY},
+            timeout=10
+        )
+        #data = {'timestamp': '2026-05-22 19:55:00', 'open': 252.030, 'high': 252.2197, 'low': 525.0000,
+                #'close': 252.1218, 'volume': 6458}
+        data = data.json()
     except requests.exceptions.Timeout as timeout_err:
         return f"Превышено время ожидания...{timeout_err}"
     except requests.exceptions.HTTPError as http_err:
@@ -67,9 +76,7 @@ def stock_cost(name_stock: str) -> float:
         return f"Ошибка в обращении к сервису. Попробутйе позже {req_err}"
     else:
         utils_log.debug(f'Делай раз. Что получили с сервера: {data}')
-        #подмена данных с сайта не дающего инфу в его формате
-
-        out = data['close']
+        out = data['price']
         out = f'{out:.2f}'
         utils_log.debug(f'Делай два. Ответ функции: {name_stock} = {out}')
 
