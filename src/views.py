@@ -4,9 +4,7 @@ import json
 import os.path
 
 
-
-
-file_path = os.path.join(r'..\data\views.log')
+file_path = os.path.join(r'..\data\log_file.log')
 log_path = os.path.abspath(file_path)
 utils_log = logging.getLogger('views')
 file_utils_log = logging.FileHandler(log_path, encoding='utf-8')
@@ -16,7 +14,7 @@ file_utils_log.setFormatter(file_utils_log_formater)
 utils_log.setLevel(logging.DEBUG)
 
 
-def valute_cost(name_valute:str) -> float:
+def valute_cost(name_valute: str) -> float:
     '''
     функция принимает трикер валюты возвращает стоимость валюты в рублях
     :param name_valute трикер валюты
@@ -24,7 +22,7 @@ def valute_cost(name_valute:str) -> float:
     '''
     name_valute = name_valute.upper()
     try:
-        response = requests.get(  'https://www.cbr-xml-daily.ru/daily_json.js', 'GET', timeout=15)
+        response = requests.get('https://www.cbr-xml-daily.ru/daily_json.js', 'GET', timeout=15)
         utils_log.debug(f'Делай раз - чтение прошло успешно и записано \n {response.text}')
     except requests.exceptions. Timeout:
         print("Превышено время ожидания...")
@@ -50,8 +48,6 @@ def stock_cost(name_stock: str) -> float:
     '''
     name_stock = name_stock.upper()
     url = 'https://api.api-ninjas.com/v1/stockprice'
-    #url = rf'https: // api.api - ninjas.com / v1 / stockprice?ticker = {name_stock}'
-    #API_KEY = os.environ['hhxtBn5pSWlYgzfUSprB99up8XxiKM6ICtrISqiu']
     API_KEY = 'hhxtBn5pSWlYgzfUSprB99up8XxiKM6ICtrISqiu'
 
     try:
@@ -61,8 +57,7 @@ def stock_cost(name_stock: str) -> float:
             headers={'X-Api-Key': API_KEY},
             timeout=10
         )
-        #data = {'timestamp': '2026-05-22 19:55:00', 'open': 252.030, 'high': 252.2197, 'low': 525.0000,
-                #'close': 252.1218, 'volume': 6458}
+
         data = data.json()
     except requests.exceptions.Timeout as timeout_err:
         return f"Превышено время ожидания...{timeout_err}"
@@ -82,8 +77,8 @@ def stock_cost(name_stock: str) -> float:
 
     return out
 
-#Сомнительное решение:
-def list_paper(type:str) -> list:
+
+def list_paper(type: str) -> list:
     '''
     функция принимает строковое значение выбора валюты 'valut' или акции 'stock' и выдает список либо валют либо акций
     из файла настройки пользователя data/user_settings.json где содержится эта информация.

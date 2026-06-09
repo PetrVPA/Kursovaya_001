@@ -17,17 +17,17 @@ file_utils_log.setFormatter(file_utils_log_formater)
 utils_log.setLevel(logging.DEBUG)
 
 
-def choice_parer(type:str, list_reqwest:list)-> dict:
+def choice_parer(type: str, list_reqwest: list) -> dict:
     '''
     функция принимает тип строки 'stock' или 'valut' и список тикеров (перечень необходимых) в соответствии с типом
      и возвращает список валют либо акций для формирования главного ответа.
-    :param type:
-    :param list_reqwest:
-    :return:
+    :param type: принимает переменную что нужно валюта либо акции
+    :param list_reqwest: принимает трикеры либо валют, либо акций
+    :return: возвращает словарь со стоимостью валют либо акций
     '''
-    answer ={}
+    answer = {}
     setr = {}
-    avane =[]
+    avane = []
     if type == 'stock':
         for item in list_reqwest:
             setr = {}
@@ -47,63 +47,71 @@ def choice_parer(type:str, list_reqwest:list)-> dict:
     utils_log.debug(f'Делей раз - список бумаг - {answer}')
     return answer
 
+
 def greeting_time() -> str:
     '''
     функция здоровается в зависимости от текущего времени суток
-    :return:
+    :return: возвращает актуальное приветствие
     '''
     current_datetime = datetime.now()
     hour_current = current_datetime.hour
 
     if hour_current >= 6 and hour_current < 12:
         greeting = "Доброе утро"
-        utils_log.debug(f'Делай раз - сейчас утро? - {greeting}')
+        utils_log.debug(f'Делай раз - сейчас утро? - {greeting}, {current_datetime}.')
     if hour_current >= 12 and hour_current < 18:
         greeting = "Добрый день"
-        utils_log.debug(f'Делай два - сейчас день? - {greeting}')
+        utils_log.debug(f'Делай два - сейчас день? - {greeting}, {current_datetime}.')
     if hour_current >= 18 and hour_current <= 23:
         greeting = "Добрый вечер"
-        utils_log.debug(f'Делай три - сейчас вечер? - {greeting}')
+        utils_log.debug(f'Делай три - сейчас вечер? - {greeting}, {current_datetime}.')
     if hour_current >= 0 and hour_current < 6:
         greeting = "Доброй ночи"
-        utils_log.debug(f'Делай четыре - сейчас ночь? - {greeting}')
+        utils_log.debug(f'Делай четыре - сейчас ночь? - {greeting}, {current_datetime}.')
 
     return greeting
 
 
-def data_frame_work()-> pd.DataFrame:
+def data_frame_work() -> pd.DataFrame:
+    '''
+    Возвращает в программу транзакции в виде дата фрейма из файла
+    :return: дата фрейм транзакций
+    '''
     #создаем дата фрейм для работы с данными
-    excel_data = pd.read_excel(r"..\data\operations.xlsx")
+    file_path = os.path.join(r'..\data\operations.xlsx')
+    set_path = os.path.abspath(file_path)
+    excel_data = pd.read_excel(set_path)
     utils_log.debug(f'Делай раз - главный датафрейм курсового проекта - {excel_data}')
     return excel_data
 
 
-def creat_list_cards(card_data:pd.DataFrame)-> list:
+def creat_list_cards(card_data: pd.DataFrame) -> list:
     '''
-    функция принимает дата фрейм транзакций принмает все значения карт в множество и возвращает список банковских карт
-    участвующих в тарнз акциях
-    :param card_data:
-    :return:
+    функция принимает дата фрейм транзакций выбирает все значения карт в множество и возвращает список банковских карт
+    участвующих в транзакциях
+    :param card_data: датафрейм всех транзакций
+    :return:список банковских карт участвующих в транзакциях
     '''
     # Формируем датафрейм без пустых элементов содержащихся в столбце "Номер карты"
     cards = card_data.loc[card_data['Номер карты'].notnull()]
     #формируем множество () через фильтрацию с выбором столбца "Номер карты"
     cards_set = set(cards['Номер карты'].tolist())
+    cards_list = sorted(cards_set)
     # возвращаем перечень кар преобразовав его из множества в список
-    utils_log.debug(f'Делай раз - список банковских карт = {cards_set}')
-    return list(cards_set)
+    utils_log.debug(f'Делай раз - список банковских карт = {cards_list}')
+    return list(cards_list)
 
 
-def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
+def cards_ful_answer(card_data: pd.DataFrame, name_cards: list) -> list(dict):
     '''
     функция принимает дата фрейм и список банковских карт и возвращает список словарей в формате определенном заданием
-     курсового проекта
-    :param card_data:
-    :param name_cards:
-    :return:
+     курсового проекта карта -> номер карты; расходы по карте; кэш бек
+    :param card_data: дата фрейм
+    :param name_cards: список банковских карт
+    :return: список словарей
     '''
     shtorm = []
-    output={}
+    output = {}
     for item in name_cards:
         #определяем словарь для финального ответа курсового проекта по банковским картам
         answer = {}
@@ -133,20 +141,20 @@ def cards_ful_answer(card_data:pd.DataFrame, name_cards:list)-> list(dict):
         utils_log.debug(f'итоговый словарь = {answer}')
         #добавляем словарь в финальный список по картам
         shtorm.append(answer)
-        output ["cards"] = shtorm
+        output["cards"] = shtorm
         utils_log.debug(f'добавляем в список = {shtorm}')
         utils_log.debug(f'Итоговый ответ в формате курсового проекта = {output}')
     return output
 
 
-def top_trans (data:pd.DataFrame)-> list(dict):
-    stend = {}
-    answer_full = {}
-    storm = []
+def top_trans(data: pd.DataFrame) -> list(dict):
+    """
+    Функция демонстрирует 5 топ транзакций по сумме платежа с указанием даты, категории и описания транзакции
+    data: pd.DataFrame датафрейм всех операций
+    storm возвращает список словарей топ 5 транзакций по сумме платежа
+    """
     # Получаем сегодняшнюю дату
     today = date.today()
-    # Формируем формат выдаваемый
-    formatted_date = today.strftime("%Y-%m-%d")
     # узнаем день месяца
     today_date = today.day
     # узнаем месяц
@@ -154,8 +162,8 @@ def top_trans (data:pd.DataFrame)-> list(dict):
     # приводим столбец к формату datetime64
     data['Дата платежа'] = pd.to_datetime(data['Дата платежа'], dayfirst=True)
     # выбираем из датафрейма нужный промежуток с 1 по текущее и подменой года по сохраненный файл...
-    spred = data.loc[(data['Дата платежа'] <= f'2021-{today_month}-{today_date}') & (
-                data['Дата платежа'] >= f'2021-{today_month}-1')]
+    spred = data.loc[(data['Дата платежа'] <= f'2021-{today_month}-{today_date}') & (data['Дата платежа']
+                                                                                     >= f'2021-{today_month}-1')]
     # сортировка по возрастанию с 1 по текущее число
     spred = spred.sort_values(by='Дата платежа', ascending=True)
     # убираем знак минус

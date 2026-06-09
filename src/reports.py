@@ -1,6 +1,5 @@
 import csv
 from dateutil.relativedelta import relativedelta
-from multiprocessing.connection import answer_challenge
 import os.path
 
 import pandas as pd
@@ -8,9 +7,8 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from numpy.ma.core import inner
 
-file_path = os.path.join(r'..\data\reports.log')
+file_path = os.path.join(r'..\data\log_file.log')
 log_path = os.path.abspath(file_path)
 utils_log = logging.getLogger('reports')
 file_utils_log = logging.FileHandler(log_path, encoding='utf-8')
@@ -20,7 +18,12 @@ file_utils_log.setFormatter(file_utils_log_formater)
 utils_log.setLevel(logging.DEBUG)
 
 
-def writen_to_csv(name = 'spending_by_category'):
+def writen_to_csv(name='spending_by_category'):
+    '''
+    Декоратор записывающий отчет в файл csv с именем по умолчанию, если пользователь не введет свое название файла
+    :param name:
+    :return:
+    '''
     def decorator(funс):
         def wrapper(*args, **kwargs):
             name = input('Вы можете ввести название сохраняемого файла: ')
@@ -44,14 +47,19 @@ def writen_to_csv(name = 'spending_by_category'):
         return wrapper
     return decorator
 
+
 # типизация переменных
-@writen_to_csv(name = 'spending_by_category')
+@writen_to_csv(name='spending_by_category')
 def spending_by_category(transactions: pd.DataFrame, category: str, date: Optional[str] = None) -> pd.DataFrame:
     '''
-    С 1.012018 по 31.12.2021г.
-    :param transactions:
-    :param category:
-    :param date:
+    Функция предоставляет 3-х месячный отчет по расходам по категории
+    Принимает датафрейм транзакций, название категории и дату опционально, если дата не выбрана
+    используется текущая дата пользователя
+    Работа функции искусственно ограничена работой в сроках с 1.012018 по 31.12.2021г. на основании предоставленного
+    файла с транзакциями.
+    :param transactions: дата фрейм транзакций
+    :param category: интересная пользователю категория
+    :param date: дата с которой ведется трех месячный отчет трат по категории.
     :return:
     '''
     utils_log.debug(f'Делай ноль - проверка принятого дата фрейма = {transactions}')
@@ -60,7 +68,7 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         today_day = date.day
         today_month = date.month
         today_year = date.year
-        if today_year>2021 or today_year<2018:
+        if today_year > 2021 or today_year < 2018:
             today_year = 2021
         utils_log.debug(f'Делай раз - проверка введенной даты = {today_day}.{today_month}.{today_year}')
         end_day = date - relativedelta(months=3)
@@ -79,17 +87,15 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         end_year = end_day.year
         end_day = end_day.day
 
-
     transactions['Дата платежа'] = pd.to_datetime(transactions['Дата платежа'], dayfirst=True)
-    spred = transactions[(transactions['Дата платежа'] <= pd.to_datetime(f'{today_year}-{today_month}-{today_day}')) &
-                         (transactions['Дата платежа'] >= pd.to_datetime(f'{end_year}-{end_month}-{end_day}'))]
+    spred = transactions[(transactions['Дата платежа'] <= pd.to_datetime(f'{today_year}-{today_month}-{today_day}')
+                          ) & (transactions['Дата платежа'] >= pd.to_datetime(f'{end_year}-{end_month}-{end_day}'))]
     utils_log.debug(f'Делай два - фильтрация дата фрейма по дате = {spred['Дата платежа']}')
 
-    spred = spred[(spred['Категория']==category)]
+    spred = spred[(spred['Категория'] == category)]
     utils_log.debug(f'Делай три - полный датафрейм по дате и категории = {category} = {spred}')
 
-    answer_challenge = spred.loc[:, ['Дата платежа', 'Категория','Сумма операции']]
+    answer_challenge = spred.loc[:, ['Дата платежа', 'Категория', 'Сумма операции']]
     utils_log.debug(f'Делай четыре - формирование фрейма ответа = {category} = {answer_challenge}')
-
 
     return answer_challenge

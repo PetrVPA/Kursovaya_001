@@ -3,9 +3,9 @@ import logging
 
 import pandas as pd
 import os.path
-from datetime import datetime
 
-file_path = os.path.join(r'..\data\services.log')
+
+file_path = os.path.join(r'..\data\log_file.log')
 log_path = os.path.abspath(file_path)
 utils_log = logging.getLogger('services')
 file_utils_log = logging.FileHandler(log_path, encoding='utf-8')
@@ -15,14 +15,21 @@ file_utils_log.setFormatter(file_utils_log_formater)
 utils_log.setLevel(logging.DEBUG)
 
 
-def beneficial_cashback(year:str, month:str) -> list(dict):
+def beneficial_cashback(year: str, month: str) -> list(dict):
+    '''
+    Функция показывает сколько кэш бека могло быть выплачено по категориям за месяц
+    :param year: интересуемый год
+    :param month: интересуемый месяц
+    :return: список словарей с категориями и кэш беком
+    '''
     year = int(year)
     month = int(month)
     data_frame_funck = data_frame_work()
     utils_log.debug(f'Делай раз - дата фрейм всех транзакций - {data_frame_funck}')
     # выбираем строки дата фрейма по искомому году и месяцу
-    data_frame_funck['Дата платежа'] = pd.to_datetime(data_frame_funck['Дата платежа'],format='%d.%m.%Y')
-    data_frame_funck = data_frame_funck[(data_frame_funck['Дата платежа'].dt.year == year) & (data_frame_funck['Дата платежа'].dt.month == month)]
+    data_frame_funck['Дата платежа'] = pd.to_datetime(data_frame_funck['Дата платежа'], format='%d.%m.%Y')
+    data_frame_funck = data_frame_funck[(data_frame_funck['Дата платежа'].dt.year == year)
+                                        & (data_frame_funck['Дата платежа'].dt.month == month)]
     utils_log.debug(f'Делай два - дата фрейм с исследуемым годом и месяцем - {data_frame_funck['Дата платежа']}')
     # удаляем из датафрейма дубликаты в столбе Категория
     #list_categories = data_frame_funck.drop_duplicates(subset=['Категория'], keep=False)
@@ -45,4 +52,3 @@ def beneficial_cashback(year:str, month:str) -> list(dict):
         answer_sum[category] = money
         utils_log.debug(f'Делай семь - добавляем в словарь очередную категорию и расходы по ней {answer_sum}')
     return answer_sum
-
