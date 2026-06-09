@@ -9,22 +9,26 @@ from src.services import beneficial_cashback
 from src.views import list_paper
 
 import logging
-import json
+import os.path
 
+file_path = os.path.join(r'..\data\log_file.log')
+log_path = os.path.abspath(file_path)
+file_utils_log = logging.FileHandler(log_path, encoding='utf-8')
 utils_log = logging.getLogger('main')
-file_utils_log = logging.FileHandler(r'..\data\main.log', encoding='utf-8')
 utils_log.addHandler(file_utils_log)
 file_utils_log_formater = logging.Formatter('%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
 file_utils_log.setFormatter(file_utils_log_formater)
 utils_log.setLevel(logging.DEBUG)
 
 
-
 if __name__ == '__main__':
+    '''
+    Главная функция проекта
+    '''
     answer_full = []
     top_answ_valut = {}
     top_answ_stok = {}
-    top_answ_trans ={}
+    top_answ_trans = {}
     answer_full.append(greeting_time())
     utils_log.debug(f'Делай ноль - контроль работы = {answer_full}')
     answer_full.append(cards_ful_answer(data_frame_work(), creat_list_cards(data_frame_work())))
