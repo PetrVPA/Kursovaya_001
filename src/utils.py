@@ -1,11 +1,13 @@
 import logging
 from datetime import date
-from src.views import stock_cost
-from src.views import valute_cost
+import json
+
 
 import pandas as pd
 from datetime import datetime
 import os.path
+import requests
+from dotenv import load_dotenv
 
 file_path = os.path.join(r'..\data\utils.log')
 log_path = os.path.abspath(file_path)
@@ -25,8 +27,6 @@ def choice_parer(type: str, list_reqwest: list) -> dict:
     :param list_reqwest: принимает трикеры либо валют, либо акций
     :return: возвращает словарь со стоимостью валют либо акций
     '''
-    answer = {}
-    setr = {}
     avane = []
     if type == 'stock':
         for item in list_reqwest:
@@ -35,7 +35,7 @@ def choice_parer(type: str, list_reqwest: list) -> dict:
             setr['stock'] = item
             setr['price'] = base
             avane.append(setr)
-        answer["stock prices"] = avane
+
     if type == 'valut':
         for item in list_reqwest:
             setr = {}
@@ -43,9 +43,8 @@ def choice_parer(type: str, list_reqwest: list) -> dict:
             setr['currency'] = item
             setr['rate'] = base
             avane.append(setr)
-        answer["currency_rates"] = avane
-    utils_log.debug(f'Делей раз - список бумаг - {answer}')
-    return answer
+    utils_log.debug(f'Делей раз - список бумаг - {avane}')
+    return avane
 
 
 def greeting_time() -> str:
@@ -102,7 +101,7 @@ def creat_list_cards(card_data: pd.DataFrame) -> list:
     return list(cards_list)
 
 
-def cards_ful_answer(card_data: pd.DataFrame, name_cards: list) -> list(dict):
+def cards_ful_answer(card_data: pd.DataFrame, name_cards: list) -> list[dict]:
     '''
     функция принимает дата фрейм и список банковских карт и возвращает список словарей в формате определенном заданием
      курсового проекта карта -> номер карты; расходы по карте; кэш бек
@@ -111,7 +110,6 @@ def cards_ful_answer(card_data: pd.DataFrame, name_cards: list) -> list(dict):
     :return: список словарей
     '''
     shtorm = []
-    output = {}
     for item in name_cards:
         #определяем словарь для финального ответа курсового проекта по банковским картам
         answer = {}
@@ -141,13 +139,11 @@ def cards_ful_answer(card_data: pd.DataFrame, name_cards: list) -> list(dict):
         utils_log.debug(f'итоговый словарь = {answer}')
         #добавляем словарь в финальный список по картам
         shtorm.append(answer)
-        output["cards"] = shtorm
-        utils_log.debug(f'добавляем в список = {shtorm}')
-        utils_log.debug(f'Итоговый ответ в формате курсового проекта = {output}')
-    return output
+        utils_log.debug(f'Итоговый ответ в формате курсового проекта = {shtorm}')
+    return shtorm
 
 
-def top_trans(data: pd.DataFrame) -> list(dict):
+def top_trans(data: pd.DataFrame) -> list[dict]:
     """
     Функция демонстрирует 5 топ транзакций по сумме платежа с указанием даты, категории и описания транзакции
     data: pd.DataFrame датафрейм всех операций
@@ -180,3 +176,69 @@ def top_trans(data: pd.DataFrame) -> list(dict):
     answer['date'] = answer['date'].dt.strftime('%Y-%m-%d')
     storm = answer.to_dict('records')
     return storm
+
+
+def valute_cost(name_valute: str) -> float:
+    '''
+    функция принимает трикер валюты возвращает стоимость валюты в рублях
+    :param name_valute трикер валюты
+    :return: stend возвращаемое значение стоимости валюты
+    '''
+    name_valute = name_valute.upper()
+    try:
+        response = requests.get('https://www.cbr-xml-daily.ru/daily_json.js', 'GET', timeout=15)
+        utils_log.debug(f'Делай раз - чтение прошло успешно и записано \n {response.text}')
+    except requests.exceptions. Timeout:
+        print("Превышено время ожидания...")
+    except requests.exceptions.TooManyRedirects:
+        print("Количество перенаправлений превысело предел")
+    except requests.exceptions.RequestException:
+        print("Ошибка в обращении к сервису. Попробуте позже")
+    else:
+        stend = json.loads(response.text)
+        utils_log.debug(f'Делай два - принят словарь \n {stend}')
+        stend = stend['Valute'][name_valute]['Previous']
+        stend = f'{stend:.2f}'
+        utils_log.debug(f'Делай три - ответ функции \n {stend}')
+
+    return stend
+
+
+def stock_cost(name_stock: str) -> float:
+    '''
+    Функция принимает строку с трикером 1-й акции и возвращает ее стоимость
+    :param name_stock:
+    :return:
+    '''
+    load_dotenv('../.env')
+    api_token = os.getenv('API_KEY')
+    name_stock = name_stock.upper()
+    url = 'https://api.api-ninjas.com/v1/stockprice'
+    API_KEY = api_token
+
+    try:
+        data = requests.get(
+            url,
+            params={'ticker': name_stock},
+            headers={'X-Api-Key': API_KEY},
+            timeout=10
+        )
+
+        data = data.json()
+    except requests.exceptions.Timeout as timeout_err:
+        return f"Превышено время ожидания...{timeout_err}"
+    except requests.exceptions.HTTPError as http_err:
+        return f"Код ошибки...{http_err}"
+    except requests.exceptions.ConnectionError as conn_err:
+        return f"Ошибка соединения...{conn_err}"
+    except requests.exceptions.TooManyRedirects:
+        return "Количество перенаправлений превысело предел"
+    except requests.exceptions.RequestException as req_err:
+        return f"Ошибка в обращении к сервису. Попробутйе позже {req_err}"
+    else:
+        utils_log.debug(f'Делай раз. Что получили с сервера: {data}')
+        out = data['price']
+        out = f'{out:.2f}'
+        utils_log.debug(f'Делай два. Ответ функции: {name_stock} = {out}')
+
+    return out

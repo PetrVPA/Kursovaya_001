@@ -15,7 +15,7 @@ file_utils_log.setFormatter(file_utils_log_formater)
 utils_log.setLevel(logging.DEBUG)
 
 
-def beneficial_cashback(year: str, month: str) -> list(dict):
+def beneficial_cashback(year: str, month: str) -> list[dict]:
     '''
     Функция показывает сколько кэш бека могло быть выплачено по категориям за месяц
     :param year: интересуемый год

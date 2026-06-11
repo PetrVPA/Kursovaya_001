@@ -1,10 +1,15 @@
-import requests
 import logging
 import json
 import os.path
+from src.utils import greeting_time
+from src.utils import cards_ful_answer
+from src.utils import data_frame_work
+from src.utils import top_trans
+from src.utils import choice_parer
+from src.utils import creat_list_cards
 
 
-file_path = os.path.join(r'..\data\log_file.log')
+file_path = os.path.join(r'..\data\views.log')
 log_path = os.path.abspath(file_path)
 utils_log = logging.getLogger('views')
 file_utils_log = logging.FileHandler(log_path, encoding='utf-8')
@@ -12,70 +17,6 @@ utils_log.addHandler(file_utils_log)
 file_utils_log_formater = logging.Formatter('%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
 file_utils_log.setFormatter(file_utils_log_formater)
 utils_log.setLevel(logging.DEBUG)
-
-
-def valute_cost(name_valute: str) -> float:
-    '''
-    функция принимает трикер валюты возвращает стоимость валюты в рублях
-    :param name_valute трикер валюты
-    :return: stend возвращаемое значение стоимости валюты
-    '''
-    name_valute = name_valute.upper()
-    try:
-        response = requests.get('https://www.cbr-xml-daily.ru/daily_json.js', 'GET', timeout=15)
-        utils_log.debug(f'Делай раз - чтение прошло успешно и записано \n {response.text}')
-    except requests.exceptions. Timeout:
-        print("Превышено время ожидания...")
-    except requests.exceptions.TooManyRedirects:
-        print("Количество перенаправлений превысело предел")
-    except requests.exceptions.RequestException:
-        print("Ошибка в обращении к сервису. Попробуте позже")
-    else:
-        stend = json.loads(response.text)
-        utils_log.debug(f'Делай два - принят словарь \n {stend}')
-        stend = stend['Valute'][name_valute]['Previous']
-        stend = f'{stend:.2f}'
-        utils_log.debug(f'Делай три - ответ функции \n {stend}')
-
-    return stend
-
-
-def stock_cost(name_stock: str) -> float:
-    '''
-    Функция принимает строку с трикером 1-й акции и возвращает ее стоимость
-    :param name_stock:
-    :return:
-    '''
-    name_stock = name_stock.upper()
-    url = 'https://api.api-ninjas.com/v1/stockprice'
-    API_KEY = 'hhxtBn5pSWlYgzfUSprB99up8XxiKM6ICtrISqiu'
-
-    try:
-        data = requests.get(
-            url,
-            params={'ticker': name_stock},
-            headers={'X-Api-Key': API_KEY},
-            timeout=10
-        )
-
-        data = data.json()
-    except requests.exceptions.Timeout as timeout_err:
-        return f"Превышено время ожидания...{timeout_err}"
-    except requests.exceptions.HTTPError as http_err:
-        return f"Код ошибки...{http_err}"
-    except requests.exceptions.ConnectionError as conn_err:
-        return f"Ошибка соединения...{conn_err}"
-    except requests.exceptions.TooManyRedirects:
-        return "Количество перенаправлений превысело предел"
-    except requests.exceptions.RequestException as req_err:
-        return f"Ошибка в обращении к сервису. Попробутйе позже {req_err}"
-    else:
-        utils_log.debug(f'Делай раз. Что получили с сервера: {data}')
-        out = data['price']
-        out = f'{out:.2f}'
-        utils_log.debug(f'Делай два. Ответ функции: {name_stock} = {out}')
-
-    return out
 
 
 def list_paper(type: str) -> list:
@@ -98,3 +39,22 @@ def list_paper(type: str) -> list:
                 list_answer = value
     utils_log.debug(f'Делай два. Ответ функции: {list_answer}')
     return list_answer
+
+
+def greet_function():
+    answer_full = {}
+    answer_full["greeting"] = (greeting_time())
+    utils_log.debug(f'Делай ноль - контроль работы = {answer_full}')
+    answer_full['cards'] = (cards_ful_answer(data_frame_work(), creat_list_cards(data_frame_work())))
+    utils_log.debug(f'Делай два - контроль работы = {answer_full}')
+    got = top_trans(data_frame_work())
+    answer_full['top_transactions'] = got
+    utils_log.debug(f'Делай три - контроль работы = {answer_full}')
+    list_valute = list_paper('valut')
+    answer_valut = choice_parer('valut', list_valute)
+    answer_full["currency_rates"] = answer_valut
+    list_stok = list_paper('stock')
+    answer_stok = choice_parer('stock', list_stok)
+    answer_full["stock_prices"] = answer_stok
+    utils_log.debug(f'Делай пять - контроль работы = {answer_full}')
+    return answer_full
